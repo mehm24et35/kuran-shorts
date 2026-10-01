@@ -203,7 +203,6 @@ def main(liste):
     klipler = next(t for t in proje["content"]["timeline"]["tracks"] if t["type"] == "Subtitle")["clips"]
     okuyan = proje["detail"]["reciter"]
     sablon = (KOK / "sablon.txt").read_text(encoding="utf-8")
-    CIKTI.mkdir(exist_ok=True)
     yapilan = set()  # bilgisayardan silinmiş olsa da bir kez üretilen tekrar üretilmesin
     if KAYIT.exists():
         with KAYIT.open(encoding="utf-8") as f:
@@ -223,16 +222,18 @@ def main(liste):
         klasor = m[3] or ruh_hali(metin)
         secilen = arkaplan_sec(klasor, (t1 - t0) / 1000)
         ad = f"{sure_adi.replace(' ', '')}_{ayetler}"
-        if ad in yapilan or (CIKTI / f"{ad}.mp4").exists():  # yarıda kesilen çalışmayı kaldığı yerden sürdürür
+        hedef = CIKTI / sure_adi.replace(" ", "")  # cikti/Nisa/Nisa_1-2.mp4
+        hedef.mkdir(parents=True, exist_ok=True)
+        if ad in yapilan or (hedef / f"{ad}.mp4").exists():  # yarıda kesilen çalışmayı kaldığı yerden sürdürür
             print(f"{sure_adi} {ayetler}: zaten var, atlandı")
             continue
         print(f"{sure_adi} {ayetler}: {(t1 - t0) / 1000:.1f} sn, arka plan: {klasor}")
 
-        gecici = CIKTI / f"{ad}.yarim.mp4"
+        gecici = hedef / f"{ad}.yarim.mp4"
         render(video, t0, t1, secilen, gecici)
-        gecici.replace(CIKTI / f"{ad}.mp4")
+        gecici.replace(hedef / f"{ad}.mp4")
         if ACIKLAMA_YAZ:
-            (CIKTI / f"{ad}.txt").write_text(sablon.format(
+            (hedef / f"{ad}.txt").write_text(sablon.format(
                 sure=sure_adi, sure_no=sure_no, ayetler=ayetler, ayet_sayisi=son - bas + 1,
                 okuyan=okuyan, meal=metin, kullanici=KULLANICI,
                 sure_etiket=re.sub(r"\W", "", kucult(sure_adi)) + "suresi",
