@@ -27,6 +27,7 @@ jobs:
           VIDEO_URL_TABANI: https://raw.githubusercontent.com/${{ github.repository }}/main/
         run: python youtube_yukle.py --adet 1
       - name: Kaydı depoya yaz
+        if: always()
         run: |
           git config user.name "paylasim-botu"
           git config user.email "bot@users.noreply.github.com"

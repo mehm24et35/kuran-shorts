@@ -114,4 +114,7 @@ if __name__ == "__main__":
             from instagram_yukle import reels
             sure, ayetler = f.stem.split("_", 1)
             ack = ACIKLAMA.format(sure=sure, ayetler=ayetler, okuyan=okuyan.get(f.stem, ""), etiket=sure.lower() + "suresi")
-            print("instagram:", reels(os.environ["VIDEO_URL_TABANI"] + f.relative_to(KOK).as_posix(), ack))
+            try:
+                print("instagram:", reels(os.environ["VIDEO_URL_TABANI"] + f.relative_to(KOK).as_posix(), ack))
+            except Exception as e:  # YouTube'a gitti ve kaydedildi; Instagram hatası tekrar yüklemeye yol açmasın
+                print("INSTAGRAM HATASI:", e)
