@@ -18,10 +18,11 @@ from googleapiclient.http import MediaFileUpload
 KOK = Path(__file__).parent
 CIKTI, KAYIT, PAYLASILAN = KOK / "cikti", KOK / "kayit.csv", KOK / "paylasilan.csv"
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+YT_NEREDEN = "📖 Kıraatin tamamı kanalımızda."
+IG_NEREDEN = "📖 Kıraatin tamamı biyografimizdeki linkte."
 ACIKLAMA = """{sure} Suresi {ayetler}. Ayet | {okuyan}
 
-📖 Kur'an-ı Kerim tilaveti ve Türkçe meal
-Abone olmayı unutmayın.
+{nereden}
 
 #kuran #kuranıkerim #tilavet #{etiket} #shorts"""
 
@@ -68,7 +69,7 @@ def yukle(yt, f, okuyan, gizlilik):
     govde = {
         "snippet": {
             "title": f"{sure} Suresi {ayetler}. Ayet | {okuyan} #shorts"[:100],
-            "description": ACIKLAMA.format(sure=sure, ayetler=ayetler, okuyan=okuyan, etiket=sure.lower() + "suresi"),
+            "description": ACIKLAMA.format(sure=sure, ayetler=ayetler, okuyan=okuyan, etiket=sure.lower() + "suresi", nereden=YT_NEREDEN),
             "categoryId": "22",
         },
         "status": {"privacyStatus": gizlilik, "selfDeclaredMadeForKids": False},
@@ -113,7 +114,7 @@ if __name__ == "__main__":
         if os.environ.get("IG_TOKEN"):  # Instagram da ayarlıysa aynı videoyu Reels olarak paylaş
             from instagram_yukle import reels
             sure, ayetler = f.stem.split("_", 1)
-            ack = ACIKLAMA.format(sure=sure, ayetler=ayetler, okuyan=okuyan.get(f.stem, ""), etiket=sure.lower() + "suresi")
+            ack = ACIKLAMA.format(sure=sure, ayetler=ayetler, okuyan=okuyan.get(f.stem, ""), etiket=sure.lower() + "suresi", nereden=IG_NEREDEN)
             try:
                 print("instagram:", reels(os.environ["VIDEO_URL_TABANI"] + f.relative_to(KOK).as_posix(), ack))
             except Exception as e:  # YouTube'a gitti ve kaydedildi; Instagram hatası tekrar yüklemeye yol açmasın
