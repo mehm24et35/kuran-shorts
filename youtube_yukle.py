@@ -118,3 +118,4 @@ if __name__ == "__main__":
                 print("instagram:", reels(os.environ["VIDEO_URL_TABANI"] + f.relative_to(KOK).as_posix(), ack))
             except Exception as e:  # YouTube'a gitti ve kaydedildi; Instagram hatası tekrar yüklemeye yol açmasın
                 print("INSTAGRAM HATASI:", e)
+        f.unlink()  # paylaşıldı, saklamaya gerek yok
