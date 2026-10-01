@@ -20,7 +20,7 @@ PROJELER = Path(os.environ["APPDATA"]) / "com.qurancaption" / "projects"
 FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
 
 KULLANICI = "@miskatulfurkan"
-FILIGRAN_Y = 1470         # üstten piksel; alt kısımda, platform açıklama alanının üstü
+FILIGRAN_Y = 1600         # üstten piksel; başlığın üst boşluğuyla orantılı (Bakara dışa aktarımında 1470 idi)
 ARKAPLAN_KARARTMA = 0.45  # 1 = orijinal parlaklık, küçüldükçe koyulaşır
 BAS_PAY, SON_PAY = 300, 1000  # ms; ayet öncesi/sonrası nefes payı (sessizlik kadarını aşmaz)
 ACIKLAMA_YAZ = False  # True: her videonun yanına sablon.txt'den açıklama dosyası yazar (otomatik paylaşım için)
