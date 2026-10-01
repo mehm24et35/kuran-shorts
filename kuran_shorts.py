@@ -204,6 +204,10 @@ def main(liste):
     okuyan = proje["detail"]["reciter"]
     sablon = (KOK / "sablon.txt").read_text(encoding="utf-8")
     CIKTI.mkdir(exist_ok=True)
+    yapilan = set()  # bilgisayardan silinmiş olsa da bir kez üretilen tekrar üretilmesin
+    if KAYIT.exists():
+        with KAYIT.open(encoding="utf-8") as f:
+            yapilan = {r["dosya"] for r in csv.DictReader(f)}
 
     for s in satirlar:
         m = re.match(r"(\d+)(?:\s*-\s*(\d+))?\s*(\w+)?$", s)
@@ -219,7 +223,7 @@ def main(liste):
         klasor = m[3] or ruh_hali(metin)
         secilen = arkaplan_sec(klasor, (t1 - t0) / 1000)
         ad = f"{sure_adi.replace(' ', '')}_{ayetler}"
-        if (CIKTI / f"{ad}.mp4").exists():  # yarıda kesilen çalışmayı kaldığı yerden sürdürür
+        if ad in yapilan or (CIKTI / f"{ad}.mp4").exists():  # yarıda kesilen çalışmayı kaldığı yerden sürdürür
             print(f"{sure_adi} {ayetler}: zaten var, atlandı")
             continue
         print(f"{sure_adi} {ayetler}: {(t1 - t0) / 1000:.1f} sn, arka plan: {klasor}")
