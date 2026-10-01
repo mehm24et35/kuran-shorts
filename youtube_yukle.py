@@ -6,7 +6,7 @@ Kullanım:
   python youtube_yukle.py --adet 1 --kuru # yüklemeden ne yükleneceğini göster
 Paylaşılanlar paylasilan.csv'ye yazılır, bir daha yüklenmez.
 """
-import argparse, csv, datetime, re
+import argparse, csv, datetime, os, re
 from pathlib import Path
 
 from google.auth.transport.requests import Request
@@ -110,3 +110,8 @@ if __name__ == "__main__":
                 w.writerow(["tarih", "dosya", "youtube_id"])
             w.writerow([datetime.date.today(), f.stem, vid])
         print("yüklendi:", f.name, "https://youtube.com/shorts/" + vid)
+        if os.environ.get("IG_TOKEN"):  # Instagram da ayarlıysa aynı videoyu Reels olarak paylaş
+            from instagram_yukle import reels
+            sure, ayetler = f.stem.split("_", 1)
+            ack = ACIKLAMA.format(sure=sure, ayetler=ayetler, okuyan=okuyan.get(f.stem, ""), etiket=sure.lower() + "suresi")
+            print("instagram:", reels(os.environ["VIDEO_URL_TABANI"] + f.relative_to(KOK).as_posix(), ack))

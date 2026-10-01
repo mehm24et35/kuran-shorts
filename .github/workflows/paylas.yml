@@ -1,0 +1,35 @@
+name: Paylas
+on:
+  workflow_dispatch:
+  schedule:  # UTC (Türkiye = UTC+3): hafta içi 06:00 ve 18:00, hafta sonu 09:00 ve 21:00
+    - cron: "0 3 * * 1-5"
+    - cron: "0 15 * * 1-5"
+    - cron: "0 6 * * 0,6"
+    - cron: "0 18 * * 0,6"
+permissions:
+  contents: write
+jobs:
+  paylas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install google-api-python-client google-auth-oauthlib requests
+      - name: Anahtarları yaz
+        run: |
+          echo '${{ secrets.CLIENT_SECRET_JSON }}' > client_secret.json
+          echo '${{ secrets.TOKEN_JSON }}' > token.json
+      - name: Sıradaki videoyu paylaş
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          VIDEO_URL_TABANI: https://raw.githubusercontent.com/${{ github.repository }}/main/
+        run: python youtube_yukle.py --adet 1
+      - name: Kaydı depoya yaz
+        run: |
+          git config user.name "paylasim-botu"
+          git config user.email "bot@users.noreply.github.com"
+          git add paylasilan.csv
+          git commit -m "paylaşıldı" || echo "değişiklik yok"
+          git push
