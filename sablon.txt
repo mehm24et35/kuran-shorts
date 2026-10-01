@@ -1,0 +1,10 @@
+{sure} Suresi {ayetler}. Ayet | {okuyan}
+
+{meal}
+
+📖 {sure} Suresi · {ayet_sayisi} ayet
+🎙️ Kari: {okuyan}
+▶️ Tilavetin tamamı YouTube kanalımızda: KANAL_LINKINI_BURAYA_YAZ
+
+{kullanici}
+#kuran #kuranıkerim #tilavet #{sure_etiket} #{okuyan_etiket} #shorts

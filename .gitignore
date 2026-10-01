@@ -1,0 +1,12 @@
+# gizli anahtarlar - ASLA yüklenmesin
+client_secret.json
+token.json
+*.token
+.env
+# yerel dosyalar
+arkaplan/
+__pycache__/
+*.log
+*.yarim.mp4
+onizleme.jpg
+1
