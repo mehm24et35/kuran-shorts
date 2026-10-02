@@ -1,11 +1,8 @@
 name: Paylas
 on:
   workflow_dispatch:
-  schedule:  # UTC (Türkiye = UTC+3): hafta içi 06:00 ve 18:00, hafta sonu 09:00 ve 21:00
-    - cron: "0 3 * * 1-5"
-    - cron: "0 15 * * 1-5"
-    - cron: "0 6 * * 0,6"
-    - cron: "0 18 * * 0,6"
+  # Zamanlama GitHub'da değil, cron-job.org'da: her gün 06:00 ve 18:00 (Europe/Istanbul)
+  # workflow_dispatch API'sini çağırıyor. GitHub'ın schedule tetikleyicisi 5-6 saat gecikiyordu.
 permissions:
   contents: write
 jobs:
