@@ -1,0 +1,22 @@
+name: Instagram kontrol
+on:
+  workflow_dispatch:
+jobs:
+  kontrol:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instagram anahtarı geçerli mi (paylaşım yapmaz)
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+        run: |
+          echo "--- hesap bilgisi ---"
+          curl -sS -G "https://graph.instagram.com/v21.0/me" \
+            --data-urlencode "fields=user_id,username,account_type" \
+            --data-urlencode "access_token=$IG_TOKEN"
+          echo
+          echo "--- içerik yayın limiti ---"
+          curl -sS -G "https://graph.instagram.com/v21.0/$IG_USER_ID/content_publishing_limit" \
+            --data-urlencode "fields=quota_usage,config" \
+            --data-urlencode "access_token=$IG_TOKEN"
+          echo
