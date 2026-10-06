@@ -8,7 +8,7 @@ liste.txt:
     41-44
     56 yildizlar                        (klasör adı yazılırsa arka plan o klasörden)
 """
-import csv, json, os, random, re, subprocess, sys, datetime
+import csv, functools, json, os, random, re, subprocess, sys, datetime
 from pathlib import Path
 
 import imageio_ffmpeg
@@ -23,6 +23,7 @@ KULLANICI = "@miskatulfurkan"
 FILIGRAN_Y = 1600         # üstten piksel; başlığın üst boşluğuyla orantılı (Bakara dışa aktarımında 1470 idi)
 ARKAPLAN_KARARTMA = 0.45  # 1 = orijinal parlaklık, küçüldükçe koyulaşır
 BAS_PAY, SON_PAY = 300, 1000  # ms; ayet öncesi/sonrası nefes payı (sessizlik kadarını aşmaz)
+EN_KISA, EN_UZUN = 4, 15  # sn; arka plan sahnesi bundan kısa olmaz; uzun ayet nefes duraklarında bölünür
 ACIKLAMA_YAZ = False  # True: her videonun yanına sablon.txt'den açıklama dosyası yazar (otomatik paylaşım için)
 W, H, FPS = 1080, 1920, 30
 
@@ -121,14 +122,29 @@ def kullanim_sayilari():
     return say
 
 
+@functools.cache
 def sure_ol(f):
     out = subprocess.run([FFMPEG, "-i", str(f)], capture_output=True, text=True, errors="ignore").stderr
     h, m, s = re.search(r"Duration: (\d+):(\d+):([\d.]+)", out).groups()
     return int(h) * 3600 + int(m) * 60 + float(s)
 
 
-def arkaplan_sec(klasor, sure):
-    """En az kullanılmış klipleri (eşitlikte rastgele) sure dolana kadar sırala."""
+def kesimler(parcalar, t0, sure):
+    """Arka planın değiştiği anlar (sn, 0 ve sure dahil): her ayet başında; ayet EN_UZUN'dan uzunsa
+    alt yazının değiştiği nefes duraklarında. O anlarda ekrandaki yazı da değiştiği için kesme göze batmaz."""
+    noktalar = [((b["startTime"] - t0) / 1000, a["verse"] != b["verse"]) for a, b in zip(parcalar, parcalar[1:])]
+    kes = [0.0]
+    for i, (t, ayet_basi) in enumerate(noktalar):
+        if t - kes[-1] < EN_KISA or sure - t < EN_KISA:
+            continue
+        sonraki = noktalar[i + 1][0] if i + 1 < len(noktalar) else sure
+        if ayet_basi or sonraki - kes[-1] > EN_UZUN:
+            kes.append(t)
+    return kes + [sure]
+
+
+def arkaplan_sec(klasor, sahneler):
+    """Her sahneye bir klip: en az kullanılmış (eşitlikte rastgele), sahne boyunca yetecek uzunlukta olanı."""
     say = kullanim_sayilari()
     if klasor == KARISIK:
         klipler = [f for f in ARKAPLAN.glob("*/*.mp4") if f.parent.name != "firtina"]
@@ -137,27 +153,30 @@ def arkaplan_sec(klasor, sure):
     if not klipler:
         sys.exit(f"arkaplan/{klasor}/ boş.")
     random.shuffle(klipler)
-    klipler.sort(key=lambda f: say.get(f.name, 0))
-    secilen, toplam = [], 0.0
-    while toplam < sure:  # arşiv yetmezse baştan tekrar eder
-        for f in klipler:
-            secilen.append(f)
-            toplam += sure_ol(f)
-            if toplam >= sure:
-                break
+    secilen = []
+    for sahne in sahneler:
+        klipler.sort(key=lambda f: say.get(f.name, 0))  # kararlı sıralama: eşitlerde karışık sıra korunur
+        uygun = [f for f in klipler if f not in secilen[-1:]]
+        f = next((f for f in uygun if sure_ol(f) >= sahne + 0.5), uygun[0])  # yetmezse render yavaşlatır
+        say[f.name] = say.get(f.name, 0) + 1
+        secilen.append(f)
     return secilen
 
 
-def render(video, t0, t1, klipler, cikis):
+def render(video, t0, t1, klipler, kes, cikis):
     sure = (t1 - t0) / 1000
+    kare = [round(t * FPS) for t in kes]  # kesimler kare sınırına oturur, kayma birikmez
     girdiler, filtre = [], []
     for i, f in enumerate(klipler):
+        adet = kare[i + 1] - kare[i]
+        yavas = max(1.0, (adet / FPS + 0.5) / sure_ol(f))  # klip sahneden kısaysa ağırlaştırıp yayar
         girdiler += ["-i", str(f)]
-        filtre.append(f"[{i}:v]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
-                      f"fps={FPS},setsar=1,format=yuv420p[b{i}]")
+        filtre.append(f"[{i}:v]setpts={yavas:.4f}*(PTS-STARTPTS),"
+                      f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
+                      f"fps={FPS},setsar=1,format=yuv420p,trim=end_frame={adet},setpts=PTS-STARTPTS[b{i}]")
     n = len(klipler)
-    filtre.append("".join(f"[b{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=0,trim=0:{sure:.3f},"
-                  f"setpts=PTS-STARTPTS,format=gbrp,colorchannelmixer="
+    filtre.append("".join(f"[b{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=0,"
+                  f"format=gbrp,colorchannelmixer="
                   f"rr={ARKAPLAN_KARARTMA}:gg={ARKAPLAN_KARARTMA}:bb={ARKAPLAN_KARARTMA}[bg]")
     filtre.append(f"[{n}:v]scale={W}:{H},fps={FPS},format=gbrp[yazi]")
     font = "C\\:/Windows/Fonts/arialbd.ttf"
@@ -220,17 +239,19 @@ def main(liste):
         ayetler = f"{bas}-{son}" if son != bas else str(bas)
         metin = meal(parcalar)
         klasor = m[3] or ruh_hali(metin)
-        secilen = arkaplan_sec(klasor, (t1 - t0) / 1000)
         ad = f"{sure_adi.replace(' ', '')}_{ayetler}"
         hedef = CIKTI / sure_adi.replace(" ", "")  # cikti/Nisa/Nisa_1-2.mp4
         hedef.mkdir(parents=True, exist_ok=True)
         if ad in yapilan or (hedef / f"{ad}.mp4").exists():  # yarıda kesilen çalışmayı kaldığı yerden sürdürür
             print(f"{sure_adi} {ayetler}: zaten var, atlandı")
             continue
-        print(f"{sure_adi} {ayetler}: {(t1 - t0) / 1000:.1f} sn, arka plan: {klasor}")
+        kes = kesimler(parcalar, t0, (t1 - t0) / 1000)
+        secilen = arkaplan_sec(klasor, [b - a for a, b in zip(kes, kes[1:])])
+        print(f"{sure_adi} {ayetler}: {(t1 - t0) / 1000:.1f} sn, arka plan: {klasor}, "
+              f"değişim: {' '.join(f'{t:.1f}' for t in kes[1:-1]) or '-'}")
 
         gecici = hedef / f"{ad}.yarim.mp4"
-        render(video, t0, t1, secilen, gecici)
+        render(video, t0, t1, secilen, kes, gecici)
         gecici.replace(hedef / f"{ad}.mp4")
         if ACIKLAMA_YAZ:
             (hedef / f"{ad}.txt").write_text(sablon.format(
