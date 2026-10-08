@@ -4,6 +4,7 @@ import os, time
 import requests
 
 API = "https://graph.instagram.com/v21.0"
+KAPAK_MS = 1500  # kapak kare konumu; videolar 0. karede siyahtan açıldığı için (fade-in) varsayılan kapak simsiyah çıkıyordu
 
 
 def kontrol(r):  # raise_for_status ile aynı, ama Instagram'ın hata gerekçesini de mesaja ekler
@@ -14,7 +15,8 @@ def kontrol(r):  # raise_for_status ile aynı, ama Instagram'ın hata gerekçesi
 def reels(video_url, aciklama):
     uid, tok = os.environ["IG_USER_ID"], os.environ["IG_TOKEN"]
     r = requests.post(f"{API}/{uid}/media", data={
-        "media_type": "REELS", "video_url": video_url, "caption": aciklama, "access_token": tok}, timeout=60)
+        "media_type": "REELS", "video_url": video_url, "caption": aciklama, "thumb_offset": KAPAK_MS,
+        "access_token": tok}, timeout=60)
     kontrol(r)
     kap = r.json()["id"]
     for _ in range(60):  # video işlenene kadar bekle (en fazla ~10 dk)
