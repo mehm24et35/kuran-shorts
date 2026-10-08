@@ -39,9 +39,13 @@ def giris():
     return build("youtube", "v3", credentials=cred)
 
 
-def sira(ad):  # "Bakara_103-105" -> ("Bakara", 103)
+SURE_SIRASI = ["Bakara", "Nisa", "Maide", "Al-iImran"]  # paylaşım sırası; listede olmayanlar sona, alfabetik
+
+
+def sira(ad):  # "Nisa_103-105" -> (1, "Nisa", 103)
     sure, ayet = ad.split("_", 1)
-    return sure, int(re.match(r"\d+", ayet).group())
+    s = SURE_SIRASI.index(sure) if sure in SURE_SIRASI else len(SURE_SIRASI)
+    return s, sure, int(re.match(r"\d+", ayet).group())
 
 
 def okuyanlar():
@@ -82,7 +86,8 @@ def yukle(yt, f, okuyan, gizlilik):
 
 
 if __name__ == "__main__":
-    assert sira("Bakara_103-105") == ("Bakara", 103) and sira("Bakara_102") == ("Bakara", 102)
+    assert sira("Nisa_103-105") == (1, "Nisa", 103) and sira("Bakara_102") == (0, "Bakara", 102)
+    assert sorted(["Maide_1", "Al-iImran_1", "Nisa_9", "Bakara_9"], key=sira) == ["Bakara_9", "Nisa_9", "Maide_1", "Al-iImran_1"]
     a = argparse.ArgumentParser()
     a.add_argument("--giris", action="store_true")
     a.add_argument("--adet", type=int, default=1)
