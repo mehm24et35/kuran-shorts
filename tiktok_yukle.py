@@ -13,6 +13,7 @@ import requests
 API = "https://open.tiktokapis.com/v2"
 DONUS = "https://mehm24et35.github.io/kuran-shorts/tiktok_donus.html"  # TikTok app'indeki redirect URI ile aynı olmalı
 KOK = Path(__file__).parent
+GIRIS_DOSYASI = KOK / "tiktok_giris.token"  # .gitignore'daki *.token'a uyar
 KAPAK_MS = 1500  # videolar 0. karede siyahtan açılıyor (instagram_yukle.py'deki gibi)
 MAX_PARCA = 64 * 1024 * 1024  # tek parça yükleme sınırı; kısa videolar bunun çok altında
 
@@ -69,19 +70,32 @@ def video(dosya, baslik):
 
 
 def giris():
-    anahtar = input("TikTok client_key: ").strip()
-    gizli = input("TikTok client_secret (yapıştırın): ").strip()  # getpass Windows konsolunda yapıştırmayı kabul etmiyor
+    def oku():  # konsola yapıştırma güvenilmez (uygulama içi terminal); değerler dosyadan okunur
+        d = dict(s.split("=", 1) for s in GIRIS_DOSYASI.read_text(encoding="utf-8").splitlines() if "=" in s)
+        return {k.strip(): v.strip() for k, v in d.items()}
+
+    ayar = oku()
+    anahtar, gizli = ayar.get("client_key", ""), ayar.get("client_secret", "")
+    if not anahtar or not gizli:
+        raise SystemExit(f"{GIRIS_DOSYASI.name} içine client_key ve client_secret yazıp kaydedin.")
     os.environ["TIKTOK_CLIENT_KEY"], os.environ["TIKTOK_CLIENT_SECRET"] = anahtar, gizli
     adres = (f"https://www.tiktok.com/v2/auth/authorize/?client_key={anahtar}&scope=user.info.basic,video.publish"
              f"&response_type=code&redirect_uri={quote(DONUS, safe='')}&state=kuran")
-    print("Tarayıcıda TikTok'a girip izin verin; açılan sayfadaki kodu buraya yapıştırın.")
+    print("Tarayıcıda TikTok'a girip izin verin; sayfadaki kodu dosyada kod= satırına yazıp kaydedin. Bekliyorum…")
     webbrowser.open(adres)
-    kod = input("Kod (ya da sayfanın tam adresi): ").strip()
-    kod = unquote(parse_qs(urlparse(kod).query)["code"][0] if kod.startswith("http") else kod)
+    for _ in range(300):  # en fazla ~10 dk
+        kod = oku().get("kod", "")
+        if kod:
+            break
+        time.sleep(2)
+    else:
+        raise SystemExit("Kod gelmedi, zaman aşımı.")
+    kod = unquote(parse_qs(urlparse(kod).query)["code"][0] if kod.startswith("http") else kod)  # kod ya da tam adres
     d = token_al(grant_type="authorization_code", code=kod, redirect_uri=DONUS)
     (KOK / "tiktok.token").write_text(d["refresh_token"])  # git'e girmez (.gitignore: *.token)
     for ad, deger in (("TIKTOK_CLIENT_KEY", anahtar), ("TIKTOK_CLIENT_SECRET", gizli), ("TIKTOK_REFRESH_TOKEN", d["refresh_token"])):
         subprocess.run(["gh", "secret", "set", ad], input=deger, text=True, check=True, cwd=KOK)  # değer stdin'den gider, komut satırında görünmez
+    GIRIS_DOSYASI.unlink()  # anahtarlar diskte kalmasın
     print("Tamam: üç TikTok secret'ı GitHub'a yazıldı.")
 
 
