@@ -21,7 +21,7 @@ MAX_PARCA = 64 * 1024 * 1024  # tek parça yükleme sınırı; kısa videolar bu
 def kontrol(r):
     if not r.ok:
         raise RuntimeError(f"{r.status_code} {r.url} -> {r.text[:500]}")
-    d = r.json()
+    d = (r.json() if r.content else None) or {}  # video PUT'unun yanıtı boş gelir
     hata = d.get("error")  # içerik API'sinde {"code": "ok"|...}, OAuth'ta düz metin
     if hata and (hata != {} and (isinstance(hata, str) or hata.get("code", "ok") != "ok")):
         raise RuntimeError(f"{r.url} -> {d}")
