@@ -116,12 +116,18 @@ if __name__ == "__main__":
                 w.writerow(["tarih", "dosya", "youtube_id"])
             w.writerow([datetime.date.today(), f.stem, vid])
         print("yüklendi:", f.name, "https://youtube.com/shorts/" + vid)
+        sure, ayetler = f.stem.split("_", 1)
+        ack = ACIKLAMA.format(sure=sure, ayetler=ayetler, okuyan=okuyan.get(f.stem, ""), etiket=sure.lower() + "suresi", nereden=IG_NEREDEN)
         if os.environ.get("IG_TOKEN"):  # Instagram da ayarlıysa aynı videoyu Reels olarak paylaş
             from instagram_yukle import reels
-            sure, ayetler = f.stem.split("_", 1)
-            ack = ACIKLAMA.format(sure=sure, ayetler=ayetler, okuyan=okuyan.get(f.stem, ""), etiket=sure.lower() + "suresi", nereden=IG_NEREDEN)
             try:
                 print("instagram:", reels(os.environ["VIDEO_URL_TABANI"] + f.relative_to(KOK).as_posix(), ack))
             except Exception as e:  # YouTube'a gitti ve kaydedildi; Instagram hatası tekrar yüklemeye yol açmasın
                 print("INSTAGRAM HATASI:", e)
+        if os.environ.get("TIKTOK_REFRESH_TOKEN"):  # TikTok da ayarlıysa aynı videoyu paylaş
+            from tiktok_yukle import video
+            try:
+                print("tiktok:", video(f, ack))
+            except Exception as e:  # aynı gerekçe: hata YouTube kaydını bozmasın
+                print("TIKTOK HATASI:", e)
         f.unlink()  # paylaşıldı, saklamaya gerek yok

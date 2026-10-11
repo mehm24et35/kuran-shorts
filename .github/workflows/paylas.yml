@@ -21,6 +21,10 @@ jobs:
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+          TIKTOK_GIZLILIK: ${{ vars.TIKTOK_GIZLILIK }}
           VIDEO_URL_TABANI: https://raw.githubusercontent.com/${{ github.repository }}/main/
         run: python youtube_yukle.py --adet 1
       - name: Kaydı depoya yaz
