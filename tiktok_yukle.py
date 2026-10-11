@@ -4,7 +4,7 @@ TIKTOK_GIZLILIK (varsayılan SELF_ONLY; TikTok denetimi geçince PUBLIC_TO_EVERY
 
 İlk giriş (bir kez, tarayıcı açılır): python tiktok_yukle.py --giris
 """
-import getpass, os, sys, time, webbrowser
+import getpass, os, subprocess, sys, time, webbrowser
 from pathlib import Path
 from urllib.parse import quote, unquote
 
@@ -78,9 +78,10 @@ def giris():
     webbrowser.open(adres)
     kod = unquote(input("Kod: ").strip())
     d = token_al(grant_type="authorization_code", code=kod, redirect_uri=DONUS)
-    (KOK / "tiktok.token").write_text(d["refresh_token"])
-    print("Tamam. Refresh token tiktok.token dosyasına yazıldı (git'e girmez).")
-    print("GitHub'a eklemek için:\n  gh secret set TIKTOK_REFRESH_TOKEN < tiktok.token")
+    (KOK / "tiktok.token").write_text(d["refresh_token"])  # git'e girmez (.gitignore: *.token)
+    for ad, deger in (("TIKTOK_CLIENT_KEY", anahtar), ("TIKTOK_CLIENT_SECRET", gizli), ("TIKTOK_REFRESH_TOKEN", d["refresh_token"])):
+        subprocess.run(["gh", "secret", "set", ad], input=deger, text=True, check=True, cwd=KOK)  # değer stdin'den gider, komut satırında görünmez
+    print("Tamam: üç TikTok secret'ı GitHub'a yazıldı.")
 
 
 if __name__ == "__main__":
