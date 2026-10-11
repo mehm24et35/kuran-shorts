@@ -1,0 +1,23 @@
+name: TikTok test
+on:
+  workflow_dispatch:
+    inputs:
+      video: { description: "cikti/ altındaki video yolu", default: "cikti/Bakara/Bakara_124-126.mp4" }
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install requests
+      - name: Videoyu yalnızca TikTok'a yükle (kayıt tutmaz, dosyayı silmez)
+        env:
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+          TIKTOK_GIZLILIK: ${{ vars.TIKTOK_GIZLILIK }}
+          VIDEO: ${{ inputs.video }}
+        run: python -c "import os, tiktok_yukle as t; print('tiktok:', t.video(os.environ['VIDEO'], 'Test yüklemesi #kuran'))"
