@@ -4,9 +4,9 @@ TIKTOK_GIZLILIK (varsayılan SELF_ONLY; TikTok denetimi geçince PUBLIC_TO_EVERY
 
 İlk giriş (bir kez, tarayıcı açılır): python tiktok_yukle.py --giris
 """
-import getpass, os, subprocess, sys, time, webbrowser
+import os, subprocess, sys, time, webbrowser
 from pathlib import Path
-from urllib.parse import quote, unquote
+from urllib.parse import parse_qs, quote, unquote, urlparse
 
 import requests
 
@@ -70,13 +70,14 @@ def video(dosya, baslik):
 
 def giris():
     anahtar = input("TikTok client_key: ").strip()
-    gizli = getpass.getpass("TikTok client_secret (yazarken görünmez): ").strip()
+    gizli = input("TikTok client_secret (yapıştırın): ").strip()  # getpass Windows konsolunda yapıştırmayı kabul etmiyor
     os.environ["TIKTOK_CLIENT_KEY"], os.environ["TIKTOK_CLIENT_SECRET"] = anahtar, gizli
     adres = (f"https://www.tiktok.com/v2/auth/authorize/?client_key={anahtar}&scope=user.info.basic,video.publish"
              f"&response_type=code&redirect_uri={quote(DONUS, safe='')}&state=kuran")
     print("Tarayıcıda TikTok'a girip izin verin; açılan sayfadaki kodu buraya yapıştırın.")
     webbrowser.open(adres)
-    kod = unquote(input("Kod: ").strip())
+    kod = input("Kod (ya da sayfanın tam adresi): ").strip()
+    kod = unquote(parse_qs(urlparse(kod).query)["code"][0] if kod.startswith("http") else kod)
     d = token_al(grant_type="authorization_code", code=kod, redirect_uri=DONUS)
     (KOK / "tiktok.token").write_text(d["refresh_token"])  # git'e girmez (.gitignore: *.token)
     for ad, deger in (("TIKTOK_CLIENT_KEY", anahtar), ("TIKTOK_CLIENT_SECRET", gizli), ("TIKTOK_REFRESH_TOKEN", d["refresh_token"])):
