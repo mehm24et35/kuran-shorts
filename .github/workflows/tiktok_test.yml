@@ -20,4 +20,5 @@ jobs:
           TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
           TIKTOK_GIZLILIK: ${{ vars.TIKTOK_GIZLILIK }}
           VIDEO: ${{ inputs.video }}
-        run: python -c "import os, tiktok_yukle as t; print('tiktok:', t.video(os.environ['VIDEO'], 'Test yüklemesi #kuran'))"
+        run: |
+          python -c "import os, tiktok_yukle as t; print('tiktok:', t.video(os.environ['VIDEO'], 'Test yüklemesi #kuran'))"
