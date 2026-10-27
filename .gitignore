@@ -5,6 +5,7 @@ token.json
 .env
 # yerel dosyalar
 arkaplan/
+arkaplan_dusuk/
 __pycache__/
 *.log
 *.yarim.mp4

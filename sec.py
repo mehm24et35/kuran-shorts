@@ -10,7 +10,7 @@ import csv, functools, re, subprocess, sys
 
 from kuran_shorts import KOK, aralik_bul, meal, proje_bul
 
-PROJE = {"Bakara": "Bakara", "Nisa": "Nisa", "Maide": "Maide", "Al-iImran": "Ali İmran"}  # cikti klasörü -> Quran Caption adı
+PROJE = {"Bakara": "Bakara", "Nisa": "Nisa", "Maide": "Maide", "Al-iImran": "Ali İmran", "Enam": "en am"}  # cikti klasörü -> Quran Caption adı
 ANLAM = KOK / "anlam.csv"
 ESIK = 7  # anlam puanı bunun altındaki parça paylaşılmaz
 UZUN = 80  # sn; bundan uzun videolar tabanın altında kalıyor (ig_istatistik, 2026-10)
