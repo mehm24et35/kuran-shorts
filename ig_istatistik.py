@@ -25,5 +25,5 @@ with open("ig_istatistik.csv", "w", newline="", encoding="utf-8") as f:
         kontrol(r)
         deger = {i["name"]: i["values"][0]["value"] for i in r.json()["data"]}
         baslik = re.sub(r"\s+", " ", (m.get("caption") or "").split("\n")[0])[:80]
-        y.writerow([m["timestamp"][:10], baslik, *(deger.get(k, "") for k in METRIK.split(",")), m["permalink"]])
+        y.writerow([m["timestamp"][:16], baslik,  # UTC tarih+saat (paylaşım saati karşılaştırması için) *(deger.get(k, "") for k in METRIK.split(",")), m["permalink"]])
 print(len(medya), "gönderi yazıldı")
