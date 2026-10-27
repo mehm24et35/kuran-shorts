@@ -1,0 +1,19 @@
+name: Instagram istatistik
+on:
+  workflow_dispatch:
+jobs:
+  istatistik:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: "*.py", sparse-checkout-cone-mode: false }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install requests
+      - name: Reels istatistiklerini çek (paylaşım yapmaz)
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+        run: python ig_istatistik.py
+      - uses: actions/upload-artifact@v4
+        with: { name: ig_istatistik, path: ig_istatistik.csv }
