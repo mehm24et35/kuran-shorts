@@ -1,9 +1,12 @@
-"""Quran Caption projesini ayet sınırlarından shortlara böler, liste.txt satırlarını yazdırır.
-Kullanım:  python bol.py "Ali İmran Suresi Muhammad"      (Maide ortalaması ~50 sn, en çok ~85 sn)"""
+"""Quran Caption projesini ayet sınırlarından shortlara böler, anlamı zayıf olanları eler (sec.py),
+kalan liste.txt satırlarını yazdırır.
+Kullanım:  python bol.py "Ali İmran Suresi Muhammad"
+           python bol.py "Ali İmran Suresi Muhammad" --hepsi   (eleme yapmadan)"""
 import sys
-from kuran_shorts import proje_bul, aralik_bul
+from kuran_shorts import SURELER, meal, proje_bul, aralik_bul
+import sec
 
-HEDEF, TAVAN = 50, 85  # sn; tek ayet TAVAN'dan uzunsa tek başına kalır
+HEDEF, TAVAN = 30, 60  # sn; kısa videolar daha çok izleniyor (ig_istatistik); tek ayet TAVAN'dan uzunsa tek başına kalır
 
 
 def bol(proje):
@@ -35,8 +38,22 @@ def bol(proje):
     return satir[::-1]
 
 
+def ele(proje, satir):  # anlam puanı sec.ESIK altındakileri çıkarır
+    klipler = next(t for t in proje["content"]["timeline"]["tracks"] if t["type"] == "Subtitle")["clips"]
+    sure = SURELER[next(k["surah"] for k in klipler if k["type"] == "Subtitle") - 1].replace("_", "")
+    ad = {f"{sure}_{b}-{e}" if e > b else f"{sure}_{b}": (b, e, d) for b, e, d in satir}
+    a = sec.anlamlar()
+    eksik = {k: meal(aralik_bul(klipler, b, e)[2]).replace("\n", " ") for k, (b, e, _) in ad.items() if k not in a}
+    if eksik:
+        a |= sec.claude_puanla(eksik)
+    return [v for k, v in ad.items() if sec.puan(a[k], v[2]) >= sec.ESIK]
+
+
 if __name__ == "__main__":
-    s = bol(proje_bul(sys.argv[1]))
+    p = proje_bul(sys.argv[1])
+    s = bol(p)
+    if "--hepsi" not in sys.argv:
+        s = ele(p, s)
     for b, e, d in s:
         print(f"{b}-{e}" if e > b else b)
     print(f"# {len(s)} short, ort {sum(d for *_, d in s) / len(s):.0f} sn, min {min(d for *_, d in s):.0f}, "

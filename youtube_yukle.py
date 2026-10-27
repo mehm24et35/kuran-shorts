@@ -39,7 +39,7 @@ def giris():
     return build("youtube", "v3", credentials=cred)
 
 
-SURE_SIRASI = ["Bakara", "Nisa", "Maide", "Al-iImran"]  # paylaşım sırası; listede olmayanlar sona, alfabetik
+SURE_SIRASI = ["Bakara", "Al-iImran", "Nisa", "Maide"]  # mushaf sırası; listede olmayanlar sona, alfabetik (yeni sure gelince ekle)
 
 
 def sira(ad):  # "Nisa_103-105" -> (1, "Nisa", 103)
@@ -86,8 +86,8 @@ def yukle(yt, f, okuyan, gizlilik):
 
 
 if __name__ == "__main__":
-    assert sira("Nisa_103-105") == (1, "Nisa", 103) and sira("Bakara_102") == (0, "Bakara", 102)
-    assert sorted(["Maide_1", "Al-iImran_1", "Nisa_9", "Bakara_9"], key=sira) == ["Bakara_9", "Nisa_9", "Maide_1", "Al-iImran_1"]
+    assert sira("Nisa_103-105") == (2, "Nisa", 103) and sira("Bakara_102") == (0, "Bakara", 102)
+    assert sorted(["Maide_1", "Al-iImran_1", "Nisa_9", "Bakara_9"], key=sira) == ["Bakara_9", "Al-iImran_1", "Nisa_9", "Maide_1"]
     a = argparse.ArgumentParser()
     a.add_argument("--giris", action="store_true")
     a.add_argument("--adet", type=int, default=1)
